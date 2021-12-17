@@ -1,0 +1,1 @@
+Inspired by CodeBullet's and AlphaPhoenix's snake algorithm videos, I'll try to make my own
