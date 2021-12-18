@@ -9,7 +9,7 @@
     clippy::suspicious
 )]
 
-use std::fmt::Debug;
+use std::fmt::{Debug, Display};
 use std::ops::{Index, IndexMut};
 
 use rand::prelude::*;
@@ -157,8 +157,8 @@ impl<R: Rng + Debug> Game<R> {
     }
 
     fn initial_snake(board_size: (usize, usize)) -> Vec<(usize, usize)> {
-        let center_x = (board_size.0 + 1) / 2;
-        let center_y = (board_size.1 + 1) / 2;
+        let center_x = ((board_size.0 + 1) / 2) - 1;
+        let center_y = ((board_size.1 + 1) / 2) - 1;
 
         // Center tile and two below
         // We now the two tiles below the center exist because
@@ -203,6 +203,12 @@ impl<R: Rng + Debug> Game<R> {
     }
     pub fn snake_head(&self) -> (usize, usize) {
         self.snake[0]
+    }
+    pub fn print(&self) {
+        print!(
+            "Move Count: {}  Apple position: {:?}\n{}",
+            self.move_count, self.apple_position, self.board
+        );
     }
 }
 
@@ -286,6 +292,17 @@ impl IndexMut<usize> for Board {
         &mut self.board[index]
     }
 }
+impl Display for Board {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.board
+            .chunks_exact(self.width()) // Divide into rows
+            .rev() // Print from top to bottom
+            .try_for_each(|chunk| {
+                writeln!(f).and_then(|_| chunk.iter().try_for_each(|cell| write!(f, "{} ", cell)))
+            })
+            .and_then(|_| writeln!(f))
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub enum Cell {
@@ -296,6 +313,15 @@ pub enum Cell {
 impl Default for Cell {
     fn default() -> Self {
         Self::Empty
+    }
+}
+impl Display for Cell {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Cell::Empty => write!(f, "\u{2591}"),
+            Cell::Snake => write!(f, "s"),
+            Cell::Apple => write!(f, "a"),
+        }
     }
 }
 
