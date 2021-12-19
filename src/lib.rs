@@ -137,19 +137,23 @@ impl<R: Rng + Debug> Game<R> {
 
         let mut game_won = false;
 
-        if let Cell::Apple = before_head {
-            // Re-add old tail to snake
-            this.snake.push(old_tail);
-            // Add new apple
-            match Self::new_apple_pos(&this.board, &mut this.rng) {
-                Ok(apple_pos) => {
-                    this.board[apple_pos] = Cell::Apple;
+        match before_head {
+            Cell::Apple => {
+                // Re-add old tail to snake
+                this.snake.push(old_tail);
+                // Add new apple
+                match Self::new_apple_pos(&this.board, &mut this.rng) {
+                    Ok(apple_pos) => {
+                        this.board[apple_pos] = Cell::Apple;
+                    }
+                    Err(_) => game_won = true,
                 }
-                Err(_) => game_won = true,
             }
-        } else {
-            // Delete old tail from board
-            this.board[old_tail] = Cell::Empty;
+            Cell::Empty => {
+                // Delete old tail from board
+                this.board[old_tail] = Cell::Empty;
+            }
+            Cell::Snake => {}
         }
 
         this.move_count += 1;
