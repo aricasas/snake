@@ -16,7 +16,7 @@ use rand::prelude::*;
 use snake::{Direction, Game, SnakeLost};
 
 fn main() {
-    let mut game = Game::new(6, 5);
+    let mut game = Game::new(10, 10);
     let mut strat = UserInput;
 
     let final_message = loop {
@@ -26,6 +26,7 @@ fn main() {
             Action::Move(direction) => match game.try_move_snake(direction) {
                 Ok((game, win)) => {
                     if win {
+                        game.print();
                         break "You won!";
                     }
                     game
