@@ -144,6 +144,7 @@ impl<R: Rng + Debug> Game<R> {
                 // Add new apple
                 match Self::new_apple_pos(&this.board, &mut this.rng) {
                     Ok(apple_pos) => {
+                        this.apple_position = apple_pos;
                         this.board[apple_pos] = Cell::Apple;
                     }
                     Err(_) => game_won = true,
