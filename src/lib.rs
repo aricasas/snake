@@ -78,51 +78,13 @@ impl<R: Rng + Debug> Game<R> {
     /// Returns an `Err` with the unchanged `Game` and the `SnakeLost` enum with the reason for losing
     #[allow(clippy::missing_panics_doc)] // The panic from unwrapping is impossible
     pub fn try_move_snake(self, direction: Direction) -> Result<(Self, bool), (Self, SnakeLost)> {
-        // Move head
-        let old_head = self.snake[0];
-
-        let new_head = match direction {
-            Direction::Up => (old_head.0, {
-                if old_head.1 + 1 == self.board.height() {
-                    return Err((self, SnakeLost::RanIntoWall));
-                }
-                old_head.1 + 1
-            }),
-            Direction::Down => (old_head.0, {
-                if old_head.1 == 0 {
-                    return Err((self, SnakeLost::RanIntoWall));
-                }
-                old_head.1 - 1
-            }),
-            Direction::Right => (
-                {
-                    if old_head.0 + 1 == self.board.width() {
-                        return Err((self, SnakeLost::RanIntoWall));
-                    }
-                    old_head.0 + 1
-                },
-                old_head.1,
-            ),
-            Direction::Left => (
-                {
-                    if old_head.0 == 0 {
-                        return Err((self, SnakeLost::RanIntoWall));
-                    }
-                    old_head.0 - 1
-                },
-                old_head.1,
-            ),
+        let new_head = match self.check_if_move_safe(direction) {
+            Ok(new_head) => new_head,
+            Err(error) => return Err((self, error)),
         };
 
         // It's okay to unwrap because snake is never empty
         let &old_tail = self.snake.last().unwrap();
-
-        // Check head collisions
-        if let Cell::Snake = self.board[new_head] {
-            if new_head != old_tail {
-                return Err((self, SnakeLost::RanIntoSnake));
-            }
-        }
 
         // Create mutable binding once it's okay to modify because no errors will appear anymore
         let mut this = self;
@@ -159,6 +121,64 @@ impl<R: Rng + Debug> Game<R> {
 
         this.move_count += 1;
         Ok((this, game_won))
+    }
+
+    /// Tries to move the snake into the direction passed in.
+    /// Returns the position of the new snake head if succesful.
+    ///
+    /// # Errors
+    ///
+    /// Will return `Err` if the move loses the game
+    /// Returns an `Err` with the `SnakeLost` enum with the reason for losing
+    #[allow(clippy::missing_panics_doc)] // The panic from unwrapping is impossible
+    pub fn check_if_move_safe(&self, direction: Direction) -> Result<(usize, usize), SnakeLost> {
+        // Move head
+        let old_head = self.snake[0];
+
+        let new_head = match direction {
+            Direction::Up => (old_head.0, {
+                if old_head.1 + 1 == self.board.height() {
+                    return Err(SnakeLost::RanIntoWall);
+                }
+                old_head.1 + 1
+            }),
+            Direction::Down => (old_head.0, {
+                if old_head.1 == 0 {
+                    return Err(SnakeLost::RanIntoWall);
+                }
+                old_head.1 - 1
+            }),
+            Direction::Right => (
+                {
+                    if old_head.0 + 1 == self.board.width() {
+                        return Err(SnakeLost::RanIntoWall);
+                    }
+                    old_head.0 + 1
+                },
+                old_head.1,
+            ),
+            Direction::Left => (
+                {
+                    if old_head.0 == 0 {
+                        return Err(SnakeLost::RanIntoWall);
+                    }
+                    old_head.0 - 1
+                },
+                old_head.1,
+            ),
+        };
+
+        // It's okay to unwrap because snake is never empty
+        let &old_tail = self.snake.last().unwrap();
+
+        // Check head collisions
+        if let Cell::Snake = self.board[new_head] {
+            if new_head != old_tail {
+                return Err(SnakeLost::RanIntoSnake);
+            }
+        }
+
+        Ok(new_head)
     }
 
     fn initial_snake(board_size: (usize, usize)) -> Vec<(usize, usize)> {
