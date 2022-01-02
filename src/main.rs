@@ -9,17 +9,18 @@
     clippy::suspicious
 )]
 
-use std::fmt::Debug;
+mod strats;
 
-use crossterm::event::{Event, KeyCode, KeyEvent};
-use rand::prelude::*;
-use snake::{Direction, Game, SnakeLost};
+use snake::{Game, SnakeLost};
+
+use crate::strats::{Action, Rotate, SnakeStrategy};
 
 fn main() {
-    let mut game = Game::new(10, 10);
-    let mut strat = UserInput;
+    let mut game = Game::new(6, 6);
+    let mut strat = Rotate {};
 
     let final_message = loop {
+        std::thread::sleep(std::time::Duration::from_millis(100));
         game.print();
 
         game = match strat.decide_move(&game) {
@@ -41,51 +42,4 @@ fn main() {
     };
 
     println!("Game over!\n{}", final_message);
-}
-
-struct UserInput;
-impl SnakeStrategy for UserInput {
-    fn decide_move<R: Rng + Debug>(&mut self, _game: &Game<R>) -> Action {
-        crossterm::terminal::enable_raw_mode().unwrap();
-
-        let action = loop {
-            match crossterm::event::read().unwrap() {
-                Event::Key(KeyEvent {
-                    code: KeyCode::Up,
-                    modifiers: _,
-                }) => break Action::Move(Direction::Up),
-                Event::Key(KeyEvent {
-                    code: KeyCode::Down,
-                    modifiers: _,
-                }) => break Action::Move(Direction::Down),
-                Event::Key(KeyEvent {
-                    code: KeyCode::Right,
-                    modifiers: _,
-                }) => break Action::Move(Direction::Right),
-                Event::Key(KeyEvent {
-                    code: KeyCode::Left,
-                    modifiers: _,
-                }) => break Action::Move(Direction::Left),
-                Event::Key(KeyEvent {
-                    code: KeyCode::Esc,
-                    modifiers: _,
-                }) => break Action::GiveUp,
-
-                _ => {}
-            }
-        };
-
-        crossterm::terminal::disable_raw_mode().unwrap();
-
-        action
-    }
-}
-
-trait SnakeStrategy {
-    fn decide_move<R: Rng + Debug>(&mut self, game: &Game<R>) -> Action;
-}
-
-enum Action {
-    Move(Direction),
-    GiveUp,
 }
