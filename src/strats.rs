@@ -1,4 +1,5 @@
 use std::fmt::Debug;
+use std::cmp::Ordering;
 
 use crossterm::event::{Event, KeyCode, KeyEvent};
 use rand::prelude::*;
@@ -95,6 +96,7 @@ impl SnakeStrategy for Rotate {
                 _ => Right,
             },
             (false, false, false, false) => {
+                #[allow(clippy::match_same_arms)] // Known false positive. Order matters
                 match (
                     in_lower_half,
                     in_upward_col,
@@ -102,13 +104,13 @@ impl SnakeStrategy for Rotate {
                     diff_apple_x,
                     diff_apple_y.cmp(&0),
                 ) {
-                    (true, true, _, -1, std::cmp::Ordering::Equal) => Left,
-                    (true, true, true, -1 | 0, std::cmp::Ordering::Greater) => Up,
+                    (true, true, _, -1, Ordering::Equal) => Left,
+                    (true, true, true, -1 | 0, Ordering::Greater) => Up,
                     (true, true, _, _, _) => Left,
                     (true, false, _, _, _) => Down,
 
-                    (false, false, _, 1, std::cmp::Ordering::Equal) => Right,
-                    (false, false, true, 1 | 0, std::cmp::Ordering::Less) => Down,
+                    (false, false, _, 1, Ordering::Equal) => Right,
+                    (false, false, true, 1 | 0, Ordering::Less) => Down,
                     (false, false, _, _, _) => Right,
                     (false, true, _, _, _) => Up,
                 }
